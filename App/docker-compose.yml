@@ -6,7 +6,7 @@ services:
     networks:
       - internal_network
 
-  # 2. СЕРВІС API-ШЛЮЗУ
+  # 2. СЕРВІС API
   api:
     build:
       context: .
@@ -40,6 +40,3 @@ services:
 networks:
   internal_network:
     driver: bridge
-
-# ПРИМІТКА: Секцію "volumes" з іменованим volume "shared_storage" ВИДАЛЕНО,
-# оскільки ми тепер використовуємо Bind Mount (./storage)
