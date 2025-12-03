@@ -14,7 +14,6 @@ services:
     container_name: image_api_gateway
     ports:
       - "8080:8080" # Відкриваємо порт для зовнішнього доступу
-    # Використовуємо Bind Mount, щоб мати доступ до файлів у локальній папці storage
     volumes:
       - ./storage:/app/storage
     depends_on:
@@ -28,7 +27,6 @@ services:
       context: .
       dockerfile: Dockerfile.worker
     container_name: image_worker_service
-    # Використовуємо Bind Mount, щоб мати доступ до файлів у локальній папці storage
     volumes:
       - ./storage:/app/storage
     depends_on:
