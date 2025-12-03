@@ -1,0 +1,45 @@
+services:
+  # 1. СЕРВІС ЧЕРГИ ТА КЕШУ
+  redis:
+    image: redis:6-alpine
+    container_name: redis_queue_cache
+    networks:
+      - internal_network
+
+  # 2. СЕРВІС API-ШЛЮЗУ
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: image_api_gateway
+    ports:
+      - "8080:8080" # Відкриваємо порт для зовнішнього доступу
+    # Використовуємо Bind Mount, щоб мати доступ до файлів у локальній папці storage
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      - redis
+    networks:
+      - internal_network
+
+  # 3. СЕРВІС ОБРОБКИ
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: image_worker_service
+    # Використовуємо Bind Mount, щоб мати доступ до файлів у локальній папці storage
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      - redis # Залежність від Redis
+    networks:
+      - internal_network
+      
+# МЕРЕЖА
+networks:
+  internal_network:
+    driver: bridge
+
+# ПРИМІТКА: Секцію "volumes" з іменованим volume "shared_storage" ВИДАЛЕНО,
+# оскільки ми тепер використовуємо Bind Mount (./storage)
