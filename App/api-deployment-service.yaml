@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway-deployment
+  labels:
+    app: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: butsenkoiv/api-gateway:v2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        
+        env:
+        - name: REDIS_HOST # Виправлено на коректну назву змінної
+          value: "redis-deployment-service" 
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_PASSWORD 
+          value: ""
+        # Тут мають бути змінні PostgreSQL, якщо вони потрібні
+        # - name: PG_HOST
+        #   value: "postgres-svc"
+        # ...
+
+        readinessProbe:
+          httpGet:
+            path: /status 
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /status
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "300m"
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+
+---
+## ⚙️ Service для API Gateway
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway-service
+  labels:
+    app: api-gateway
+spec:
+  type: LoadBalancer 
+  selector:
+    app: api-gateway
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: http # Додано ім'я порту для ServiceMonitor

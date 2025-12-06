@@ -1,24 +1,34 @@
+# --- ЕТАП 1: ЗБІРКА (BUILDER) ---
 FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
+# Копіюємо файли залежностей 
 COPY worker/go.mod .
 COPY worker/go.sum .
 
+# Завантажуємо залежності Go
 RUN go mod download
 
+# Копіюємо решту вихідного коду
 COPY worker/ .
 
+# Видаляємо go.work, якщо він існує
 RUN rm -f go.work
 
+# Компілюємо додаток Go
 RUN go build -o /worker-service .
 
+# --- ЕТАП 2: ФІНАЛЬНИЙ ОБРАЗ (FINAL) ---
 FROM alpine:latest AS final
 
+# Створюємо каталог storage та встановлюємо права доступу
 RUN mkdir -p /app/storage && chmod -R 777 /app/storage
 
+# Копіюємо скомпільований бінарний файл
 COPY --from=builder /worker-service /worker-service
 
 WORKDIR /app
 
+# Визначаємо команду, яка буде виконуватися при запуску
 ENTRYPOINT ["/worker-service"]
